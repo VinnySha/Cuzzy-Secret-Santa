@@ -1,118 +1,81 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Landing from "./components/Landing";
-import NameInput from "./components/NameInput";
-import Reveal from "./components/Reveal";
-import ThemeToggle from "./components/ThemeToggle";
-import { shuffleAssignments } from "./utils/shuffle";
-import { saveToStorage, loadFromStorage, clearStorage } from "./utils/storage";
-
-const PHASES = {
-  LANDING: "landing",
-  INPUT: "input",
-  REVEAL: "reveal",
-};
+import Login from "./components/Login";
+import Dashboard from "./components/Dashboard";
+import { verifyToken } from "./utils/api";
 
 function App() {
-  const [phase, setPhase] = useState(PHASES.LANDING);
-  const [names, setNames] = useState([]);
-  const [assignments, setAssignments] = useState(null);
-  const [theme, setTheme] = useState("christmas");
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load saved state
-    const saved = loadFromStorage();
-    if (saved) {
-      if (saved.names) setNames(saved.names);
-      if (saved.assignments) setAssignments(saved.assignments);
-      if (saved.theme) setTheme(saved.theme);
-      if (saved.phase) setPhase(saved.phase);
+    // Check if user is already logged in
+    const token = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+
+    if (token && savedUser) {
+      // Verify token is still valid
+      verifyToken()
+        .then((data) => {
+          setUser(JSON.parse(savedUser));
+        })
+        .catch(() => {
+          // Token invalid, clear storage
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
     }
   }, []);
 
-  const handleStart = () => {
-    setPhase(PHASES.INPUT);
-    saveToStorage({ phase: PHASES.INPUT, theme });
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
   };
 
-  const handleFinalize = (finalNames) => {
-    setNames(finalNames);
-    const shuffled = shuffleAssignments(finalNames);
-    setAssignments(shuffled);
-    setPhase(PHASES.REVEAL);
-    saveToStorage({
-      phase: PHASES.REVEAL,
-      names: finalNames,
-      assignments: shuffled,
-      theme,
-    });
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
   };
 
-  const handleReset = () => {
-    if (
-      confirm(
-        "Are you sure you want to start over? This will clear all assignments."
-      )
-    ) {
-      clearStorage();
-      setPhase(PHASES.LANDING);
-      setNames([]);
-      setAssignments(null);
-    }
-  };
-
-  const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
-    const current = loadFromStorage();
-    saveToStorage({ ...current, theme: newTheme });
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-green-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="text-6xl"
+        >
+          🎁
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       <AnimatePresence mode="wait">
-        {phase === PHASES.LANDING && (
+        {!user ? (
           <motion.div
-            key="landing"
+            key="login"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <Landing onStart={handleStart} />
+            <Login onLoginSuccess={handleLoginSuccess} />
           </motion.div>
-        )}
-
-        {phase === PHASES.INPUT && (
+        ) : (
           <motion.div
-            key="input"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-          >
-            <ThemeToggle
-              currentTheme={theme}
-              onThemeChange={handleThemeChange}
-            />
-            <NameInput onFinalize={handleFinalize} theme={theme} />
-          </motion.div>
-        )}
-
-        {phase === PHASES.REVEAL && assignments && (
-          <motion.div
-            key="reveal"
+            key="dashboard"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
           >
-            <ThemeToggle
-              currentTheme={theme}
-              onThemeChange={handleThemeChange}
-            />
-            <Reveal
-              names={names}
-              assignments={assignments}
-              theme={theme}
-              onReset={handleReset}
-            />
+            <Dashboard user={user} onLogout={handleLogout} />
           </motion.div>
         )}
       </AnimatePresence>
