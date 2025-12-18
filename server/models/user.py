@@ -65,6 +65,17 @@ class User:
         assigned_user = self.find_by_id(user["assignedTo"])
         return assigned_user
 
+    def get_user_assigned_to_me(self, user_id):
+        """Get the user who is assigned to this user (their Secret Santa)"""
+        # Find all users who have this user as their assignment
+        user = self.find_by_id(user_id)
+        if not user:
+            return None
+        
+        # Find user where assignedTo == user_id
+        santa = self.collection.find_one({"assignedTo": ObjectId(user_id)})
+        return santa
+
     def update_secret_key(self, user_id, secret_key):
         """Update user's secret key"""
         hashed_key = bcrypt.hashpw(secret_key.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")

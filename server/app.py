@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from routes.auth import auth_bp
 from routes.assignments import assignments_bp
 from routes.admin import admin_bp
+from routes.messages import messages_bp
 
 load_dotenv()
 
@@ -33,6 +34,7 @@ app.config["MONGO_DB"] = db
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(assignments_bp, url_prefix="/api/assignments")
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
+app.register_blueprint(messages_bp, url_prefix="/api/messages")
 
 
 @app.route("/api/health")

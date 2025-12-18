@@ -145,3 +145,26 @@ export const markAssignmentSeen = async () => {
     method: "POST",
   });
 };
+
+// Message API
+export const getAssignmentConversation = async () => {
+  return authFetch("/messages/conversation/assignment");
+};
+
+export const getSantaConversation = async () => {
+  return authFetch("/messages/conversation/santa");
+};
+
+export const sendMessageToAssignment = async (message) => {
+  return authFetch("/messages/send/assignment", {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+};
+
+export const sendMessageToSanta = async (message) => {
+  return authFetch("/messages/send/santa", {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+};
