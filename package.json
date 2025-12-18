@@ -12,7 +12,8 @@
     "start": "python run.py",
     "init-users": "python scripts/init_users.py",
     "shuffle": "python scripts/shuffle.py",
-    "clear-keys": "python scripts/clear_secret_keys.py"
+    "clear-keys": "python scripts/clear_secret_keys.py",
+    "clear-messages": "python scripts/clear_messages.py"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
