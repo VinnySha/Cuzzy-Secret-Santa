@@ -173,6 +173,15 @@ export default function NameSelection() {
           >
             ← Back
           </motion.button>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4"
+          >
+            Press your name to login, or tap the key to change it!
+          </motion.p>
         </motion.div>
       </motion.div>
     </div>
