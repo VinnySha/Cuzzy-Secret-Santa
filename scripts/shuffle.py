@@ -30,50 +30,24 @@ def shuffle():
 
         print(f"\n🎲 Shuffling {len(users)} users...")
 
-        # Fisher-Yates shuffle
+        # Randomize the order of users
         shuffled = users.copy()
-        attempts = 0
-        max_attempts = 100
+        random.shuffle(shuffled)
 
-        while attempts < max_attempts:
-            random.shuffle(shuffled)
-
-            # Check if valid (no self-assignments)
-            valid = True
-            for i in range(len(users)):
-                if str(users[i]["_id"]) == str(shuffled[i]["_id"]):
-                    valid = False
-                    break
-
-            if valid:
-                # Assign and reset seenAssignment
-                for i in range(len(users)):
-                    users_collection.update_one(
-                        {"_id": users[i]["_id"]},
-                        {"$set": {"assignedTo": shuffled[i]["_id"], "seenAssignment": False}},
-                    )
-
-                print("\n✅ Assignments shuffled successfully!\n")
-                for i in range(len(users)):
-                    print(f"   {users[i]['name']} → {shuffled[i]['name']}")
-                sys.exit(0)
-
-            attempts += 1
-
-        # Fallback
-        print("⚠️  Using fallback shuffle method...")
-        for i in range(len(users)):
-            if str(users[i]["_id"]) == str(shuffled[i]["_id"]):
-                next_index = (i + 1) % len(shuffled)
-                shuffled[i], shuffled[next_index] = shuffled[next_index], shuffled[i]
+        # Create circular assignment: each person assigns to the next,
+        # with the last person assigning back to the first
+        print("\n✅ Assignments shuffled successfully!\n")
+        for i in range(len(shuffled)):
+            # Assign current person to the next person (circular)
+            next_index = (i + 1) % len(shuffled)
+            assigned_to = shuffled[next_index]
+            
             users_collection.update_one(
-                {"_id": users[i]["_id"]},
-                {"$set": {"assignedTo": shuffled[i]["_id"], "seenAssignment": False}},
+                {"_id": shuffled[i]["_id"]},
+                {"$set": {"assignedTo": assigned_to["_id"], "seenAssignment": False}},
             )
-
-        print("\n✅ Assignments shuffled (with fallback fix)!\n")
-        for i in range(len(users)):
-            print(f"   {users[i]['name']} → {shuffled[i]['name']}")
+            
+            print(f"   {shuffled[i]['name']} → {assigned_to['name']}")
 
     except Exception as error:
         print(f"❌ Error: {error}")

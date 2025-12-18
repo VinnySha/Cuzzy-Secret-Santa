@@ -27,7 +27,7 @@ export default function LandingPage() {
             ease: "easeInOut",
           }}
         >
-          🎁 Cousin Secret Santa 2025
+          🎁 Cuzzys Secret Santa 2025
         </motion.h1>
 
         <motion.p
@@ -36,7 +36,7 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Welcome to our Secret Santa exchange! Pick your name to get started.
+          SECRET SANTA TIMEEEEE WOOOOO! -vinny
         </motion.p>
 
         <motion.button
@@ -51,4 +51,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
