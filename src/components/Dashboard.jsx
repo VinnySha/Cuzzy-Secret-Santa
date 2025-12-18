@@ -517,31 +517,43 @@ export default function Dashboard({ user, onLogout }) {
               <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 text-center">
                 📋 {assignment.assignedTo.name}'s Questionnaire Answers
               </h3>
-              {assignment?.assignedTo?.questionnaire &&
-              Object.keys(assignment.assignedTo.questionnaire).length > 0 ? (
-                <div className="space-y-4">
-                  {questionnaireQuestions.map((item) => {
-                    const answer =
-                      assignment.assignedTo.questionnaire[item.key];
-                    if (!answer) return null;
-                    return (
-                      <motion.div
-                        key={item.key}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="p-4 bg-gradient-to-r from-red-50 to-green-50 dark:from-gray-700 dark:to-gray-600 rounded-lg"
-                      >
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                          {item.question}
-                        </p>
-                        <p className="text-gray-800 dark:text-gray-200">
-                          {answer}
-                        </p>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ) : (
+              {(() => {
+                const questionnaire = assignment?.assignedTo?.questionnaire;
+                if (!questionnaire || Object.keys(questionnaire).length === 0) {
+                  return null; // Show "check back later"
+                }
+                // Check if all answers are empty strings
+                const allEmpty = Object.values(questionnaire).every(
+                  (answer) => !answer || answer.trim() === ""
+                );
+                if (allEmpty) {
+                  return null; // Show "check back later"
+                }
+                // Show answers
+                return (
+                  <div className="space-y-4">
+                    {questionnaireQuestions.map((item) => {
+                      const answer = questionnaire[item.key];
+                      if (!answer || answer.trim() === "") return null;
+                      return (
+                        <motion.div
+                          key={item.key}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="p-4 bg-gradient-to-r from-red-50 to-green-50 dark:from-gray-700 dark:to-gray-600 rounded-lg"
+                        >
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            {item.question}
+                          </p>
+                          <p className="text-gray-800 dark:text-gray-200">
+                            {answer}
+                          </p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                );
+              })() || (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
