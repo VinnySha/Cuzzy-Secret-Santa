@@ -84,6 +84,8 @@ def shuffle():
                     break
 
             if valid:
+                # Reset seenAssignment for all users first
+                user_model.reset_all_seen_assignments()
                 # Assign
                 for i in range(len(users)):
                     user_model.update_assignment(
@@ -103,6 +105,8 @@ def shuffle():
             attempts += 1
 
         # Fallback: force fix self-assignments
+        # Reset seenAssignment for all users first
+        user_model.reset_all_seen_assignments()
         for i in range(len(users)):
             if str(users[i]["_id"]) == str(shuffled[i]["_id"]):
                 next_index = (i + 1) % len(shuffled)

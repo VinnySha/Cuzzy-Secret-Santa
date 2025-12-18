@@ -46,11 +46,11 @@ def shuffle():
                     break
 
             if valid:
-                # Assign
+                # Assign and reset seenAssignment
                 for i in range(len(users)):
                     users_collection.update_one(
                         {"_id": users[i]["_id"]},
-                        {"$set": {"assignedTo": shuffled[i]["_id"]}},
+                        {"$set": {"assignedTo": shuffled[i]["_id"], "seenAssignment": False}},
                     )
 
                 print("\n✅ Assignments shuffled successfully!\n")
@@ -68,7 +68,7 @@ def shuffle():
                 shuffled[i], shuffled[next_index] = shuffled[next_index], shuffled[i]
             users_collection.update_one(
                 {"_id": users[i]["_id"]},
-                {"$set": {"assignedTo": shuffled[i]["_id"]}},
+                {"$set": {"assignedTo": shuffled[i]["_id"], "seenAssignment": False}},
             )
 
         print("\n✅ Assignments shuffled (with fallback fix)!\n")

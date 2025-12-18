@@ -74,10 +74,13 @@ export const getUsers = async () => {
 };
 
 export const checkUserKey = async (name) => {
-  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/check-key`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
+  const response = await fetch(
+    `${API_BASE}/auth/users/${encodeURIComponent(name)}/check-key`,
+    {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -88,11 +91,14 @@ export const checkUserKey = async (name) => {
 };
 
 export const verifyUserKey = async (name, secretKey) => {
-  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/verify-key`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secretKey }),
-  });
+  const response = await fetch(
+    `${API_BASE}/auth/users/${encodeURIComponent(name)}/verify-key`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secretKey }),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -108,11 +114,14 @@ export const setUserKey = async (name, secretKey, currentKey = null) => {
     body.currentKey = currentKey;
   }
 
-  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/set-key`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const response = await fetch(
+    `${API_BASE}/auth/users/${encodeURIComponent(name)}/set-key`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -139,5 +148,11 @@ export const updateMyWishlist = async (wishlist) => {
   return authFetch("/assignments/my-wishlist", {
     method: "PUT",
     body: JSON.stringify({ wishlist }),
+  });
+};
+
+export const markAssignmentSeen = async () => {
+  return authFetch("/assignments/my-assignment/mark-seen", {
+    method: "POST",
   });
 };

@@ -34,6 +34,7 @@ def get_my_assignment():
 
         return jsonify({
             "assigned": True,
+            "seenAssignment": user.get("seenAssignment", False),
             "assignedTo": {
                 "name": assigned_user["name"],
                 "wishlist": assigned_user.get("wishlist", []),
@@ -92,5 +93,30 @@ def update_my_wishlist():
         })
     except Exception as error:
         print(f"Update wishlist error: {error}")
+        return jsonify({"error": "Server error"}), 500
+
+
+@assignments_bp.route("/my-assignment/mark-seen", methods=["POST"])
+@jwt_required()
+def mark_assignment_seen():
+    """Mark that the user has seen their assignment animation"""
+    try:
+        db = current_app.config["MONGO_DB"]
+        user_model = User(db)
+
+        user_id = get_jwt_identity()
+        user = user_model.find_by_id(user_id)
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_model.mark_assignment_seen(user_id)
+
+        return jsonify({
+            "message": "Assignment marked as seen",
+            "seenAssignment": True,
+        })
+    except Exception as error:
+        print(f"Mark assignment seen error: {error}")
         return jsonify({"error": "Server error"}), 500
 

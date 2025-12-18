@@ -5,6 +5,7 @@ import {
   getMyWishlist,
   updateMyWishlist,
   getUsers,
+  markAssignmentSeen,
 } from "../utils/api";
 import DrumrollAnimation from "./DrumrollAnimation";
 
@@ -39,8 +40,12 @@ export default function Dashboard({ user, onLogout }) {
       const names = (usersData.users || []).map((u) => u.name);
       setAllNames(names);
 
-      // Show animation if assignment exists
-      if (assignmentData?.assigned && assignmentData?.assignedTo?.name) {
+      // Show animation if assignment exists and user hasn't seen it yet
+      if (
+        assignmentData?.assigned &&
+        assignmentData?.assignedTo?.name &&
+        !assignmentData?.seenAssignment
+      ) {
         setShowAnimation(true);
       } else {
         setAnimationComplete(true);
@@ -53,9 +58,17 @@ export default function Dashboard({ user, onLogout }) {
     }
   };
 
-  const handleAnimationComplete = () => {
+  const handleAnimationComplete = async () => {
     setShowAnimation(false);
     setAnimationComplete(true);
+
+    // Mark assignment as seen on the server
+    try {
+      await markAssignmentSeen();
+    } catch (err) {
+      console.error("Failed to mark assignment as seen:", err);
+      // Don't show error to user, this is a background operation
+    }
   };
 
   const handleAddWishlistItem = () => {

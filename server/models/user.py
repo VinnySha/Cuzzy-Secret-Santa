@@ -15,6 +15,7 @@ class User:
             "secretKey": None,
             "assignedTo": None,
             "wishlist": [],
+            "seenAssignment": False,
             "createdAt": datetime.now(timezone.utc),
         }
         
@@ -83,4 +84,15 @@ class User:
     def has_secret_key(self, user):
         """Check if user has a secret key set"""
         return user and "secretKey" in user and user["secretKey"] is not None
+
+    def mark_assignment_seen(self, user_id):
+        """Mark that user has seen their assignment"""
+        self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"seenAssignment": True}}
+        )
+
+    def reset_all_seen_assignments(self):
+        """Reset seenAssignment to False for all users"""
+        self.collection.update_many({}, {"$set": {"seenAssignment": False}})
 
