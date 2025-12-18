@@ -507,18 +507,18 @@ export default function Dashboard({ user, onLogout }) {
           </motion.div>
 
           {/* Display assigned person's questionnaire if available */}
-          {assignment?.assigned &&
-            assignment?.assignedTo?.questionnaire &&
-            Object.keys(assignment.assignedTo.questionnaire).length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700"
-              >
-                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 text-center">
-                  📋 {assignment.assignedTo.name}'s Questionnaire Answers
-                </h3>
+          {assignment?.assigned && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700"
+            >
+              <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 text-center">
+                📋 {assignment.assignedTo.name}'s Questionnaire Answers
+              </h3>
+              {assignment?.assignedTo?.questionnaire &&
+              Object.keys(assignment.assignedTo.questionnaire).length > 0 ? (
                 <div className="space-y-4">
                   {questionnaireQuestions.map((item) => {
                     const answer =
@@ -541,8 +541,18 @@ export default function Dashboard({ user, onLogout }) {
                     );
                   })}
                 </div>
-              </motion.div>
-            )}
+              ) : (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-gray-500 dark:text-gray-400 italic text-center py-4"
+                >
+                  {assignment.assignedTo.name} hasn't filled out their
+                  questionnaire yet. Check back later!
+                </motion.p>
+              )}
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </div>
