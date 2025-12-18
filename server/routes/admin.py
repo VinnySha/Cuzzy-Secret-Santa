@@ -23,12 +23,12 @@ def init_users():
         for user_data in users_data:
             try:
                 name = user_data.get("name")
-                secret_key = user_data.get("secretKey")
+                secret_key = user_data.get("secretKey")  # Optional
 
-                if not name or not secret_key:
+                if not name:
                     errors.append({
-                        "name": name or "Unknown",
-                        "error": "Name and secretKey are required",
+                        "name": "Unknown",
+                        "error": "Name is required",
                     })
                     continue
 
@@ -38,6 +38,7 @@ def init_users():
                     errors.append({"name": name, "error": "User already exists"})
                     continue
 
+                # Create user with or without secret key
                 user = user_model.create(name, secret_key)
                 created_users.append({"name": user["name"], "id": str(user["_id"])})
             except Exception as error:

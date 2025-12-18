@@ -19,12 +19,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 load_dotenv()
 
 COUSINS = [
-    {"name": "Charvi", "secretKey": "charvi2025"},
-    {"name": "Rohan", "secretKey": "rohan2025"},
-    {"name": "Vinny", "secretKey": "vinny2025"},
-    {"name": "Isha", "secretKey": "isha2025"},
-    {"name": "Praneil", "secretKey": "praneil2025"},
-    {"name": "Rohil", "secretKey": "rohil2025"},
+    {"name": "Charvi"},
+    {"name": "Rohan"},
+    {"name": "Vinny"},
+    {"name": "Isha"},
+    {"name": "Praneil"},
+    {"name": "Rohil"},
 ]
 
 
@@ -51,14 +51,10 @@ def init_users():
                     errors.append({"name": cousin["name"], "error": "Already exists"})
                     continue
 
-                # Hash secret key
-                hashed_key = bcrypt.hashpw(
-                    cousin["secretKey"].encode("utf-8"), bcrypt.gensalt()
-                ).decode("utf-8")
-
+                # Create user without secret key (users will set it themselves)
                 user = {
                     "name": cousin["name"],
-                    "secretKey": hashed_key,
+                    "secretKey": None,
                     "assignedTo": None,
                     "wishlist": [],
                     "createdAt": datetime.now(timezone.utc),
@@ -78,9 +74,8 @@ def init_users():
             for e in errors:
                 print(f"   - {e['name']}: {e['error']}")
 
-        print("\n🔑 Secret Keys (share these with each cousin):")
-        for c in COUSINS:
-            print(f"   {c['name']}: {c['secretKey']}")
+        print("\n📝 Note: Users are created without secret keys.")
+        print("   Each user will need to set their secret key when they first log in.")
 
     except Exception as error:
         print(f"❌ Fatal error: {error}")

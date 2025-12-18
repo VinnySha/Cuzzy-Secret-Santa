@@ -26,6 +26,28 @@ export default function NameSelection() {
     }
   };
 
+  const [userKeyStatus, setUserKeyStatus] = useState({});
+
+  useEffect(() => {
+    // Check key status for all users
+    const checkAllKeys = async () => {
+      const status = {};
+      for (const user of users) {
+        try {
+          const keyData = await checkUserKey(user.name);
+          status[user.name] = keyData.hasKey;
+        } catch (err) {
+          status[user.name] = false;
+        }
+      }
+      setUserKeyStatus(status);
+    };
+
+    if (users.length > 0) {
+      checkAllKeys();
+    }
+  }, [users]);
+
   const handleNameSelect = async (name) => {
     setSelectedName(name);
     setError("");
@@ -35,7 +57,7 @@ export default function NameSelection() {
       const keyData = await checkUserKey(name);
       
       if (!keyData.hasKey) {
-        // No key set, redirect to /key page
+        // No key set - don't show error, just navigate to key setup
         navigate(`/key?name=${encodeURIComponent(name)}`);
       } else {
         // Key is set, proceed to login
@@ -44,6 +66,10 @@ export default function NameSelection() {
     } catch (err) {
       setError(err.message || "Failed to check key status");
     }
+  };
+
+  const handleGoToKeySetup = (name) => {
+    navigate(`/key?name=${encodeURIComponent(name)}`);
   };
 
   if (loading) {
@@ -91,20 +117,45 @@ export default function NameSelection() {
           )}
 
           <div className="space-y-3">
-            {users.map((user, index) => (
-              <motion.button
-                key={user.name}
-                onClick={() => handleNameSelect(user.name)}
-                className="w-full px-6 py-4 bg-gradient-to-r from-red-500 to-green-500 text-white text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * index }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {user.name}
-              </motion.button>
-            ))}
+            {users.map((user, index) => {
+              const hasKey = userKeyStatus[user.name] === true;
+              return (
+                <div key={user.name} className="flex gap-2">
+                  <motion.button
+                    onClick={() => handleNameSelect(user.name)}
+                    className={`flex-1 px-6 py-4 ${
+                      hasKey
+                        ? "bg-gradient-to-r from-red-500 to-green-500 text-white"
+                        : "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
+                    } text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {user.name}
+                    {!hasKey && (
+                      <span className="ml-2 text-sm">(No key set)</span>
+                    )}
+                  </motion.button>
+                  {!hasKey && (
+                    <motion.button
+                      onClick={() => handleGoToKeySetup(user.name)}
+                      className="px-4 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index + 0.05 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      title="Set your secret key"
+                    >
+                      🔑
+                    </motion.button>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <motion.button

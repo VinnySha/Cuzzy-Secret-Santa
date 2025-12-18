@@ -8,17 +8,20 @@ class User:
     def __init__(self, db):
         self.collection = db.users
 
-    def create(self, name, secret_key):
-        """Create a new user with hashed secret key"""
-        hashed_key = bcrypt.hashpw(secret_key.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        
+    def create(self, name, secret_key=None):
+        """Create a new user with optional secret key"""
         user = {
             "name": name,
-            "secretKey": hashed_key,
+            "secretKey": None,
             "assignedTo": None,
             "wishlist": [],
             "createdAt": datetime.now(timezone.utc),
         }
+        
+        # Only hash and set secret key if provided
+        if secret_key:
+            hashed_key = bcrypt.hashpw(secret_key.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+            user["secretKey"] = hashed_key
         
         result = self.collection.insert_one(user)
         user["_id"] = result.inserted_id
@@ -38,7 +41,7 @@ class User:
 
     def verify_secret_key(self, user, secret_key):
         """Verify secret key against stored hash"""
-        if not user or "secretKey" not in user:
+        if not user or "secretKey" not in user or user["secretKey"] is None:
             return False
         return bcrypt.checkpw(secret_key.encode("utf-8"), user["secretKey"].encode("utf-8"))
 
@@ -79,5 +82,5 @@ class User:
 
     def has_secret_key(self, user):
         """Check if user has a secret key set"""
-        return user and "secretKey" in user and user["secretKey"]
+        return user and "secretKey" in user and user["secretKey"] is not None
 
