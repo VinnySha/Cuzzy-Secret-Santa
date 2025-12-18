@@ -104,11 +104,14 @@ export default function Dashboard({ user, onLogout }) {
     allNames.length > 0
   ) {
     return (
-      <DrumrollAnimation
-        names={allNames}
-        targetName={assignment.assignedTo.name}
-        onComplete={handleAnimationComplete}
-      />
+      <AnimatePresence>
+        <DrumrollAnimation
+          key="drumroll"
+          names={allNames}
+          targetName={assignment.assignedTo.name}
+          onComplete={handleAnimationComplete}
+        />
+      </AnimatePresence>
     );
   }
 

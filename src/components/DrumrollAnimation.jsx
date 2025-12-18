@@ -6,10 +6,17 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
   const confettiTriggered = useRef(false);
   const timersRef = useRef([]);
   const confettiIntervalRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const onCompleteRef = useRef(onComplete);
+
+  // Keep onComplete ref up to date
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Find the target index
   const targetIndex = names.findIndex((name) => name === targetName);
@@ -40,7 +47,7 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
     setRotation(targetRotation);
 
     // Immediately complete
-    onComplete();
+    onCompleteRef.current();
   };
 
   useEffect(() => {
@@ -69,28 +76,8 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
 
       if (progress >= 1) {
         // Animation complete
-        setIsSpinning(false);
         setRotation(startRotation + totalSpins * 360 + targetRotation);
-
-        // Trigger confetti after a brief delay
-        const confettiDelayTimer = setTimeout(() => {
-          if (!confettiTriggered.current) {
-            confettiTriggered.current = true;
-            setShowConfetti(true);
-            triggerConfetti();
-
-            // Clear confetti and call onComplete after 3 seconds
-            const confettiClearTimer = setTimeout(() => {
-              setShowConfetti(false);
-              const completeTimer = setTimeout(() => {
-                onComplete();
-              }, 500);
-              timersRef.current.push(completeTimer);
-            }, 3000);
-            timersRef.current.push(confettiClearTimer);
-          }
-        }, 500);
-        timersRef.current.push(confettiDelayTimer);
+        setIsSpinning(false);
         return;
       }
 
@@ -106,53 +93,94 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
       timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current = [];
     };
-  }, [isSpinning, targetRotation, onComplete]);
+  }, [isSpinning, targetRotation]);
 
-  const triggerConfetti = () => {
-    const duration = 3000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+  // Handle confetti and fade when spinning stops
+  useEffect(() => {
+    if (isSpinning) return; // Only run when spinning stops
 
-    function randomInRange(min, max) {
-      return Math.random() * (max - min) + min;
+    // Trigger confetti immediately when wheel stops
+    if (!confettiTriggered.current) {
+      confettiTriggered.current = true;
+      setShowConfetti(true);
+      triggerConfetti();
+
+      // After ~1 second, fade out and call onComplete
+      const confettiClearTimer = setTimeout(() => {
+        setFadeOut(true);
+        // After fade completes, call onComplete
+        const completeTimer = setTimeout(() => {
+          onCompleteRef.current();
+        }, 800); // Fade duration
+        timersRef.current.push(completeTimer);
+      }, 1000);
+      timersRef.current.push(confettiClearTimer);
     }
 
-    confettiIntervalRef.current = setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
+    return () => {
+      // Cleanup timers on unmount
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+      timersRef.current = [];
+    };
+  }, [isSpinning]);
 
-      if (timeLeft <= 0) {
-        if (confettiIntervalRef.current) {
-          clearInterval(confettiIntervalRef.current);
-          confettiIntervalRef.current = null;
-        }
-        return;
-      }
+  const triggerConfetti = () => {
+    // Multiple bursts of confetti for dramatic effect
+    const defaults = {
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#ef4444", "#22c55e", "#fbbf24", "#3b82f6", "#a855f7"],
+    };
 
-      const particleCount = 50 * (timeLeft / duration);
+    // Main burst from center
+    confetti({
+      ...defaults,
+      angle: 60,
+      startVelocity: 45,
+    });
 
+    // Burst from left
+    confetti({
+      ...defaults,
+      angle: 120,
+      origin: { x: 0.2, y: 0.5 },
+      startVelocity: 40,
+    });
+
+    // Burst from right
+    confetti({
+      ...defaults,
+      angle: 60,
+      origin: { x: 0.8, y: 0.5 },
+      startVelocity: 40,
+    });
+
+    // Additional bursts after a short delay
+    setTimeout(() => {
       confetti({
         ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        particleCount: 50,
+        angle: 90,
+        origin: { x: 0.5, y: 0.3 },
+        startVelocity: 35,
       });
     }, 250);
   };
 
-  // Generate gradient colors for each segment (red to green theme)
-  const getSegmentColor = (index, total) => {
-    const ratio = index / total;
-    // Create a gradient from red to green, cycling through variations
-    const hue = (ratio * 120 + 0) % 120; // 0 (red) to 120 (green)
-    return `hsl(${hue}, 70%, 50%)`;
+  // Generate alternating red and green colors
+  const getSegmentColor = (index) => {
+    return index % 2 === 0 ? "#ef4444" : "#22c55e"; // Red and green alternating
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 to-gray-800 z-50 flex flex-col items-center justify-center">
+    <motion.div
+      className="fixed inset-0 bg-gradient-to-br from-gray-900 to-gray-800 z-50 flex flex-col items-center justify-center"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: fadeOut ? 0 : 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8, ease: "easeInOut" }}
+    >
       {/* Skip button */}
       <motion.button
         onClick={handleSkip}
@@ -183,10 +211,10 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
       </motion.div>
 
       {/* Wheel Container */}
-      <div className="relative w-96 h-96">
-        {/* Pointer Triangle */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20">
-          <div className="w-0 h-0 border-t-[20px] border-t-transparent border-b-[20px] border-b-transparent border-l-[30px] border-l-blue-500"></div>
+      <div className="relative w-[600px] h-[600px]">
+        {/* Pointer Triangle - flipped to point towards wheel */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20">
+          <div className="w-0 h-0 border-t-[25px] border-t-transparent border-b-[25px] border-b-transparent border-r-[35px] border-r-blue-500"></div>
         </div>
 
         {/* Rotating Wheel */}
@@ -225,7 +253,7 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
                 `Z`,
               ].join(" ");
 
-              const color = getSegmentColor(idx, names.length);
+              const color = getSegmentColor(idx);
               const isTarget = name === targetName && !isSpinning;
 
               return (
@@ -300,6 +328,6 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
