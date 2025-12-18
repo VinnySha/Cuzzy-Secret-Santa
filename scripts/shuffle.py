@@ -47,7 +47,7 @@ def shuffle():
                 {"$set": {"assignedTo": assigned_to["_id"], "seenAssignment": False}},
             )
             
-            print(f"   {shuffled[i]['name']} → {assigned_to['name']}")
+            # print(f"   {shuffled[i]['name']} → {assigned_to['name']}")
 
     except Exception as error:
         print(f"❌ Error: {error}")
