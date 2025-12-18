@@ -15,6 +15,7 @@
     "clear-keys": "python scripts/clear_secret_keys.py"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "framer-motion": "^10.16.16",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

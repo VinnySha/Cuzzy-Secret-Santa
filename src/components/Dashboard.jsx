@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getMyAssignment, getMyWishlist, updateMyWishlist } from "../utils/api";
+import {
+  getMyAssignment,
+  getMyWishlist,
+  updateMyWishlist,
+  getUsers,
+} from "../utils/api";
+import DrumrollAnimation from "./DrumrollAnimation";
 
 export default function Dashboard({ user, onLogout }) {
   const [assignment, setAssignment] = useState(null);
@@ -9,6 +15,9 @@ export default function Dashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showWishlistEdit, setShowWishlistEdit] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [allNames, setAllNames] = useState([]);
+  const [animationComplete, setAnimationComplete] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -17,18 +26,36 @@ export default function Dashboard({ user, onLogout }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [assignmentData, wishlistData] = await Promise.all([
+      const [assignmentData, wishlistData, usersData] = await Promise.all([
         getMyAssignment(),
         getMyWishlist(),
+        getUsers(),
       ]);
 
       setAssignment(assignmentData);
       setMyWishlist(wishlistData.wishlist || []);
+
+      // Extract names from users data
+      const names = (usersData.users || []).map((u) => u.name);
+      setAllNames(names);
+
+      // Show animation if assignment exists
+      if (assignmentData?.assigned && assignmentData?.assignedTo?.name) {
+        setShowAnimation(true);
+      } else {
+        setAnimationComplete(true);
+      }
     } catch (err) {
       setError(err.message || "Failed to load data");
+      setAnimationComplete(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAnimationComplete = () => {
+    setShowAnimation(false);
+    setAnimationComplete(true);
   };
 
   const handleAddWishlistItem = () => {
@@ -66,6 +93,22 @@ export default function Dashboard({ user, onLogout }) {
           🎁
         </motion.div>
       </div>
+    );
+  }
+
+  // Show animation if assignment exists and animation hasn't completed
+  if (
+    showAnimation &&
+    assignment?.assigned &&
+    assignment?.assignedTo?.name &&
+    allNames.length > 0
+  ) {
+    return (
+      <DrumrollAnimation
+        names={allNames}
+        targetName={assignment.assignedTo.name}
+        onComplete={handleAnimationComplete}
+      />
     );
   }
 
