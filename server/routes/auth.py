@@ -122,9 +122,9 @@ def check_key(name):
         return jsonify({"error": "Server error"}), 500
 
 
-@auth_bp.route("/users/<name>/set-key", methods=["POST"])
-def set_key(name):
-    """Set or update a user's secret key"""
+@auth_bp.route("/users/<name>/verify-key", methods=["POST"])
+def verify_key(name):
+    """Verify if the provided secret key is correct for a user"""
     try:
         data = request.get_json()
         secret_key = data.get("secretKey")
@@ -138,6 +138,41 @@ def set_key(name):
         user = user_model.find_by_name(name)
         if not user:
             return jsonify({"error": "User not found"}), 404
+        
+        # Verify the secret key
+        is_valid = user_model.verify_secret_key(user, secret_key)
+        
+        return jsonify({
+            "valid": is_valid,
+            "name": user["name"]
+        })
+    except Exception as error:
+        print(f"Verify key error: {error}")
+        return jsonify({"error": "Server error"}), 500
+
+
+@auth_bp.route("/users/<name>/set-key", methods=["POST"])
+def set_key(name):
+    """Set or update a user's secret key"""
+    try:
+        data = request.get_json()
+        secret_key = data.get("secretKey")
+        current_key = data.get("currentKey")  # Optional, for verification when updating
+        
+        if not secret_key:
+            return jsonify({"error": "Secret key is required"}), 400
+        
+        db = current_app.config["MONGO_DB"]
+        user_model = User(db)
+        
+        user = user_model.find_by_name(name)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # If current_key is provided, verify it before updating
+        if current_key:
+            if not user_model.verify_secret_key(user, current_key):
+                return jsonify({"error": "Current secret key is incorrect"}), 401
         
         # Update the secret key
         user_model.update_secret_key(str(user["_id"]), secret_key)

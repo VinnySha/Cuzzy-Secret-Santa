@@ -55,7 +55,7 @@ export default function NameSelection() {
     try {
       // Check if user has a secret key set
       const keyData = await checkUserKey(name);
-      
+
       if (!keyData.hasKey) {
         // No key set - don't show error, just navigate to key setup
         navigate(`/key?name=${encodeURIComponent(name)}`);
@@ -69,7 +69,14 @@ export default function NameSelection() {
   };
 
   const handleGoToKeySetup = (name) => {
-    navigate(`/key?name=${encodeURIComponent(name)}`);
+    const hasKey = userKeyStatus[name] === true;
+    if (hasKey) {
+      // User has key, go to update page
+      navigate(`/key/update?name=${encodeURIComponent(name)}`);
+    } else {
+      // User doesn't have key, go to setup page
+      navigate(`/key?name=${encodeURIComponent(name)}`);
+    }
   };
 
   if (loading) {
@@ -94,9 +101,7 @@ export default function NameSelection() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        <motion.h1
-          className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent text-center"
-        >
+        <motion.h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent text-center">
           Pick Your Name
         </motion.h1>
 
@@ -139,20 +144,24 @@ export default function NameSelection() {
                       <span className="ml-2 text-sm">(No key set)</span>
                     )}
                   </motion.button>
-                  {!hasKey && (
-                    <motion.button
-                      onClick={() => handleGoToKeySetup(user.name)}
-                      className="px-4 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index + 0.05 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      title="Set your secret key"
-                    >
-                      🔑
-                    </motion.button>
-                  )}
+                  <motion.button
+                    onClick={() => handleGoToKeySetup(user.name)}
+                    className={`px-4 py-4 ${
+                      hasKey
+                        ? "bg-yellow-500 hover:bg-yellow-600"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    } text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index + 0.05 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title={
+                      hasKey ? "Update your secret key" : "Set your secret key"
+                    }
+                  >
+                    🔑
+                  </motion.button>
                 </div>
               );
             })}
@@ -169,4 +178,3 @@ export default function NameSelection() {
     </div>
   );
 }
-

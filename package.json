@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "start": "python run.py",
     "init-users": "python scripts/init_users.py",
-    "shuffle": "python scripts/shuffle.py"
+    "shuffle": "python scripts/shuffle.py",
+    "clear-keys": "python scripts/clear_secret_keys.py"
   },
   "dependencies": {
     "framer-motion": "^10.16.16",

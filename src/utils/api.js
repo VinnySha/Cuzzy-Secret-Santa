@@ -87,11 +87,31 @@ export const checkUserKey = async (name) => {
   return response.json();
 };
 
-export const setUserKey = async (name, secretKey) => {
-  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/set-key`, {
+export const verifyUserKey = async (name, secretKey) => {
+  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/verify-key`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secretKey }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to verify key");
+  }
+
+  return response.json();
+};
+
+export const setUserKey = async (name, secretKey, currentKey = null) => {
+  const body = { secretKey };
+  if (currentKey) {
+    body.currentKey = currentKey;
+  }
+
+  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/set-key`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

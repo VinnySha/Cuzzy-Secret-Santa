@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import LandingPage from "./components/LandingPage";
 import NameSelection from "./components/NameSelection";
 import KeySetup from "./components/KeySetup";
+import UpdateKey from "./components/UpdateKey";
 import Login from "./components/Login";
 import WaitingPage from "./components/WaitingPage";
 import Dashboard from "./components/Dashboard";
@@ -112,6 +113,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/name" element={<NameSelection />} />
         <Route path="/key" element={<KeySetup />} />
+        <Route path="/key/update" element={<UpdateKey />} />
         <Route path="/login" element={<Login />} />
         <Route path="/waiting" element={<ProtectedWaiting />} />
         <Route path="/dashboard" element={<ProtectedDashboard />} />
