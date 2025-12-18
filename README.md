@@ -1,6 +1,6 @@
 # 🎁 Cuzzy Secret Santa 2025
 
-A full-stack Secret Santa website for the cuzzys! Each cuzzy creates their own secret key and logs in to see their assignment and manage their wishlist.
+A full-stack Secret Santa website for the cuzzys! Each cuzzy creates their own secret key and logs in to see their assignment.
 
 ## ✨ Features
 
@@ -9,9 +9,6 @@ A full-stack Secret Santa website for the cuzzys! Each cuzzy creates their own s
 - Secret key authentication (users create their own keys)
 - Drumroll animation when viewing assignment for the first time
 - Individual private assignments
-- Wishlist management (add/edit your own wishlist)
-- Questionnaire system to help your Secret Santa
-- View your assigned person's wishlist and questionnaire
 - Secret key updates
 - Mobile-friendly design
 
@@ -76,8 +73,6 @@ npm run clear-keys
   "name": String (unique),
   "secretKey": String | None (hashed with bcrypt when set),
   "assignedTo": ObjectId | None (reference to User),
-  "wishlist": [String],
-  "questionnaire": Object,
   "seenAssignment": Boolean,
   "createdAt": DateTime
 }

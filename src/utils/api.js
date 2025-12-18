@@ -140,30 +140,8 @@ export const getMyAssignment = async () => {
   return authFetch("/assignments/my-assignment");
 };
 
-export const getMyWishlist = async () => {
-  return authFetch("/assignments/my-wishlist");
-};
-
-export const updateMyWishlist = async (wishlist) => {
-  return authFetch("/assignments/my-wishlist", {
-    method: "PUT",
-    body: JSON.stringify({ wishlist }),
-  });
-};
-
 export const markAssignmentSeen = async () => {
   return authFetch("/assignments/my-assignment/mark-seen", {
     method: "POST",
-  });
-};
-
-export const getMyQuestionnaire = async () => {
-  return authFetch("/assignments/my-questionnaire");
-};
-
-export const updateMyQuestionnaire = async (questionnaire) => {
-  return authFetch("/assignments/my-questionnaire", {
-    method: "PUT",
-    body: JSON.stringify({ questionnaire }),
   });
 };

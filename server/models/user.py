@@ -14,7 +14,6 @@ class User:
             "name": name,
             "secretKey": None,
             "assignedTo": None,
-            "wishlist": [],
             "seenAssignment": False,
             "createdAt": datetime.now(timezone.utc),
         }
@@ -53,13 +52,6 @@ class User:
             {"$set": {"assignedTo": ObjectId(assigned_to_id)}}
         )
 
-    def update_wishlist(self, user_id, wishlist):
-        """Update user's wishlist"""
-        self.collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"wishlist": wishlist}}
-        )
-
     def clear_all_assignments(self):
         """Clear all assignments"""
         self.collection.update_many({}, {"$set": {"assignedTo": None}})
@@ -95,11 +87,4 @@ class User:
     def reset_all_seen_assignments(self):
         """Reset seenAssignment to False for all users"""
         self.collection.update_many({}, {"$set": {"seenAssignment": False}})
-
-    def update_questionnaire(self, user_id, questionnaire):
-        """Update user's questionnaire answers"""
-        self.collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"questionnaire": questionnaire}}
-        )
 

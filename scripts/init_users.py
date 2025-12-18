@@ -56,7 +56,6 @@ def init_users():
                     "name": cuzzy["name"],
                     "secretKey": None,
                     "assignedTo": None,
-                    "wishlist": [],
                     "createdAt": datetime.now(timezone.utc),
                 }
 

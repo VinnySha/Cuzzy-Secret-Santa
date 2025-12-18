@@ -37,63 +37,10 @@ def get_my_assignment():
             "seenAssignment": user.get("seenAssignment", False),
             "assignedTo": {
                 "name": assigned_user["name"],
-                "wishlist": assigned_user.get("wishlist", []),
-                "questionnaire": assigned_user.get("questionnaire", {}),
             },
         })
     except Exception as error:
         print(f"Get assignment error: {error}")
-        return jsonify({"error": "Server error"}), 500
-
-
-@assignments_bp.route("/my-wishlist", methods=["GET"])
-@jwt_required()
-def get_my_wishlist():
-    try:
-        db = current_app.config["MONGO_DB"]
-        user_model = User(db)
-
-        user_id = get_jwt_identity()
-        user = user_model.find_by_id(user_id)
-
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        return jsonify({
-            "wishlist": user.get("wishlist", []),
-        })
-    except Exception as error:
-        print(f"Get wishlist error: {error}")
-        return jsonify({"error": "Server error"}), 500
-
-
-@assignments_bp.route("/my-wishlist", methods=["PUT"])
-@jwt_required()
-def update_my_wishlist():
-    try:
-        db = current_app.config["MONGO_DB"]
-        user_model = User(db)
-
-        data = request.get_json()
-        wishlist = data.get("wishlist")
-
-        if not isinstance(wishlist, list):
-            return jsonify({"error": "Wishlist must be an array"}), 400
-
-        user_id = get_jwt_identity()
-        user = user_model.find_by_id(user_id)
-
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        user_model.update_wishlist(user_id, wishlist)
-
-        return jsonify({
-            "message": "Wishlist updated successfully",
-            "wishlist": wishlist,
-        })
-    except Exception as error:
-        print(f"Update wishlist error: {error}")
         return jsonify({"error": "Server error"}), 500
 
 
@@ -119,58 +66,5 @@ def mark_assignment_seen():
         })
     except Exception as error:
         print(f"Mark assignment seen error: {error}")
-        return jsonify({"error": "Server error"}), 500
-
-
-@assignments_bp.route("/my-questionnaire", methods=["GET"])
-@jwt_required()
-def get_my_questionnaire():
-    """Get the current user's questionnaire answers"""
-    try:
-        db = current_app.config["MONGO_DB"]
-        user_model = User(db)
-
-        user_id = get_jwt_identity()
-        user = user_model.find_by_id(user_id)
-
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        return jsonify({
-            "questionnaire": user.get("questionnaire", {}),
-        })
-    except Exception as error:
-        print(f"Get questionnaire error: {error}")
-        return jsonify({"error": "Server error"}), 500
-
-
-@assignments_bp.route("/my-questionnaire", methods=["PUT"])
-@jwt_required()
-def update_my_questionnaire():
-    """Update the current user's questionnaire answers"""
-    try:
-        db = current_app.config["MONGO_DB"]
-        user_model = User(db)
-
-        data = request.get_json()
-        questionnaire = data.get("questionnaire")
-
-        if not isinstance(questionnaire, dict):
-            return jsonify({"error": "Questionnaire must be an object"}), 400
-
-        user_id = get_jwt_identity()
-        user = user_model.find_by_id(user_id)
-
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        user_model.update_questionnaire(user_id, questionnaire)
-
-        return jsonify({
-            "message": "Questionnaire updated successfully",
-            "questionnaire": questionnaire,
-        })
-    except Exception as error:
-        print(f"Update questionnaire error: {error}")
         return jsonify({"error": "Server error"}), 500
 
