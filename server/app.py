@@ -20,15 +20,31 @@ jwt = JWTManager(app)
 
 # MongoDB connection
 mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017/secret-santa")
+db = None
+client = None
+
 try:
-    client = MongoClient(mongodb_uri)
+    # Add connection options for better reliability with Atlas replica sets
+    client = MongoClient(
+        mongodb_uri,
+        serverSelectionTimeoutMS=5000,  # 5 second timeout for server selection
+        connectTimeoutMS=10000,  # 10 second timeout for initial connection
+        socketTimeoutMS=45000,  # 45 second timeout for socket operations
+        retryWrites=True,
+        retryReads=True,
+    )
+    # Test the connection by pinging the server
+    client.admin.command('ping')
     db = client.get_database()
     print("✅ Connected to MongoDB")
 except Exception as error:
     print(f"❌ MongoDB connection error: {error}")
+    db = None
+    client = None
 
 # Make db available to routes
 app.config["MONGO_DB"] = db
+app.config["MONGO_CLIENT"] = client
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
@@ -39,7 +55,28 @@ app.register_blueprint(messages_bp, url_prefix="/api/messages")
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status": "ok", "message": "Server is running"})
+    try:
+        if db is not None:
+            # Test the connection
+            db.command('ping')
+            return jsonify({
+                "status": "ok", 
+                "message": "Server is running",
+                "mongodb": "connected"
+            })
+        else:
+            return jsonify({
+                "status": "ok", 
+                "message": "Server is running",
+                "mongodb": "disconnected"
+            }), 503
+    except Exception as e:
+        return jsonify({
+            "status": "ok", 
+            "message": "Server is running",
+            "mongodb": "error",
+            "error": str(e)
+        }), 503
 
 
 # Serve React app in production

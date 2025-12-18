@@ -89,6 +89,9 @@ def get_users():
     """Get list of all users (names only)"""
     try:
         db = current_app.config["MONGO_DB"]
+        if db is None:
+            return jsonify({"error": "Database connection unavailable"}), 503
+        
         user_model = User(db)
         
         users = user_model.find_all()
