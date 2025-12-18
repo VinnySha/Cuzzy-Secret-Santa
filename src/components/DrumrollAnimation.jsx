@@ -1,6 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
+
+// Animation constants
+const ANIMATION_DURATION = 5000;
+const TOTAL_SPINS = 5;
+const CONFETTI_DELAY = 1000;
+const FADE_DURATION = 800;
 
 export default function DrumrollAnimation({ names, targetName, onComplete }) {
   const [rotation, setRotation] = useState(0);
@@ -9,7 +15,6 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
   const [fadeOut, setFadeOut] = useState(false);
   const confettiTriggered = useRef(false);
   const timersRef = useRef([]);
-  const confettiIntervalRef = useRef(null);
   const animationFrameRef = useRef(null);
   const onCompleteRef = useRef(onComplete);
 
@@ -18,35 +23,28 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // Find the target index
-  const targetIndex = names.findIndex((name) => name === targetName);
+  // Calculate target rotation to align target segment with pointer
+  const { targetRotation, segmentAngle } = useMemo(() => {
+    const targetIndex = names.findIndex((name) => name === targetName);
+    const angle = 360 / names.length;
+    const rotation =
+      targetIndex >= 0 ? 90 - targetIndex * angle - angle / 2 : 0;
+    return { targetRotation: rotation, segmentAngle: angle };
+  }, [names, targetName]);
 
-  // Calculate target rotation
-  // SVG is rotated -90deg, pointer is at 0deg (right side)
-  // We want the center of the target segment to align with the pointer
-  // Each segment is 360/names.length degrees wide
-  const segmentAngle = 360 / names.length;
-  const targetRotation =
-    targetIndex >= 0 ? 90 - targetIndex * segmentAngle - segmentAngle / 2 : 0;
-
-  const handleSkip = () => {
-    // Cancel animation frame
+  // Cleanup helper
+  const cleanup = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    if (confettiIntervalRef.current) {
-      clearInterval(confettiIntervalRef.current);
-    }
-
-    // Clear all timers
     timersRef.current.forEach((timer) => clearTimeout(timer));
     timersRef.current = [];
+  };
 
-    // Stop spinning and set to target rotation
+  const handleSkip = () => {
+    cleanup();
     setIsSpinning(false);
     setRotation(targetRotation);
-
-    // Immediately complete
     onCompleteRef.current();
   };
 
@@ -54,29 +52,21 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
     if (!isSpinning) return;
 
     const startTime = Date.now();
-    const duration = 5000; // 5 seconds total
-    const totalSpins = 5; // Number of full rotations
-    const startRotation = 0;
 
     const animate = () => {
       if (!isSpinning) return;
 
       const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Ease out cubic for smooth deceleration
+      const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
       const easedProgress = 1 - Math.pow(1 - progress, 3);
 
-      // Calculate rotation: multiple spins + final target position
-      const spinRotation = totalSpins * 360 * (1 - easedProgress);
-      const finalRotation =
-        startRotation + spinRotation + targetRotation * easedProgress;
+      const spinRotation = TOTAL_SPINS * 360 * (1 - easedProgress);
+      const finalRotation = spinRotation + targetRotation * easedProgress;
 
       setRotation(finalRotation);
 
       if (progress >= 1) {
-        // Animation complete
-        setRotation(startRotation + totalSpins * 360 + targetRotation);
+        setRotation(TOTAL_SPINS * 360 + targetRotation);
         setIsSpinning(false);
         return;
       }
@@ -85,47 +75,30 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
     };
 
     animationFrameRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      timersRef.current.forEach((timer) => clearTimeout(timer));
-      timersRef.current = [];
-    };
+    return cleanup;
   }, [isSpinning, targetRotation]);
 
   // Handle confetti and fade when spinning stops
   useEffect(() => {
-    if (isSpinning) return; // Only run when spinning stops
+    if (isSpinning || confettiTriggered.current) return;
 
-    // Trigger confetti immediately when wheel stops
-    if (!confettiTriggered.current) {
-      confettiTriggered.current = true;
-      setShowConfetti(true);
-      triggerConfetti();
+    confettiTriggered.current = true;
+    setShowConfetti(true);
+    triggerConfetti();
 
-      // After ~1 second, fade out and call onComplete
-      const confettiClearTimer = setTimeout(() => {
-        setFadeOut(true);
-        // After fade completes, call onComplete
-        const completeTimer = setTimeout(() => {
-          onCompleteRef.current();
-        }, 800); // Fade duration
-        timersRef.current.push(completeTimer);
-      }, 1000);
-      timersRef.current.push(confettiClearTimer);
-    }
+    const fadeTimer = setTimeout(() => {
+      setFadeOut(true);
+      const completeTimer = setTimeout(() => {
+        onCompleteRef.current();
+      }, FADE_DURATION);
+      timersRef.current.push(completeTimer);
+    }, CONFETTI_DELAY);
+    timersRef.current.push(fadeTimer);
 
-    return () => {
-      // Cleanup timers on unmount
-      timersRef.current.forEach((timer) => clearTimeout(timer));
-      timersRef.current = [];
-    };
+    return cleanup;
   }, [isSpinning]);
 
   const triggerConfetti = () => {
-    // Multiple bursts of confetti for dramatic effect
     const defaults = {
       particleCount: 100,
       spread: 70,
@@ -133,22 +106,13 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
       colors: ["#ef4444", "#22c55e", "#fbbf24", "#3b82f6", "#a855f7"],
     };
 
-    // Main burst from center
-    confetti({
-      ...defaults,
-      angle: 60,
-      startVelocity: 45,
-    });
-
-    // Burst from left
+    confetti({ ...defaults, angle: 60, startVelocity: 45 });
     confetti({
       ...defaults,
       angle: 120,
       origin: { x: 0.2, y: 0.5 },
       startVelocity: 40,
     });
-
-    // Burst from right
     confetti({
       ...defaults,
       angle: 60,
@@ -156,7 +120,6 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
       startVelocity: 40,
     });
 
-    // Additional bursts after a short delay
     setTimeout(() => {
       confetti({
         ...defaults,
@@ -168,9 +131,39 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
     }, 250);
   };
 
-  // Generate alternating red and green colors
-  const getSegmentColor = (index) => {
-    return index % 2 === 0 ? "#ef4444" : "#22c55e"; // Red and green alternating
+  // Helper: Generate segment path data
+  const getSegmentPath = (index, segmentAngle) => {
+    const startAngle = index * segmentAngle;
+    const endAngle = (index + 1) * segmentAngle;
+    const startAngleRad = (startAngle * Math.PI) / 180;
+    const endAngleRad = (endAngle * Math.PI) / 180;
+    const radius = 180;
+    const center = 200;
+
+    const x1 = center + radius * Math.cos(startAngleRad);
+    const y1 = center + radius * Math.sin(startAngleRad);
+    const x2 = center + radius * Math.cos(endAngleRad);
+    const y2 = center + radius * Math.sin(endAngleRad);
+    const largeArc = segmentAngle > 180 ? 1 : 0;
+
+    return `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+  };
+
+  // Helper: Get name position on wheel
+  const getNamePosition = (index, segmentAngle) => {
+    const baseAngle = index * segmentAngle + segmentAngle / 2;
+    const angle = baseAngle - 90; // Offset for SVG rotation
+    const angleRad = (angle * Math.PI) / 180;
+    const radius = 140;
+    const center = 200;
+    const x = center + radius * Math.cos(angleRad);
+    const y = center + radius * Math.sin(angleRad);
+
+    return {
+      left: `${(x / 400) * 100}%`,
+      top: `${(y / 400) * 100}%`,
+      transform: `translate(-50%, -50%) rotate(${baseAngle}deg)`,
+    };
   };
 
   return (
@@ -179,7 +172,7 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
       initial={{ opacity: 1 }}
       animate={{ opacity: fadeOut ? 0 : 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.8, ease: "easeInOut" }}
+      transition={{ duration: FADE_DURATION / 1000, ease: "easeInOut" }}
     >
       {/* Skip button */}
       <motion.button
@@ -232,34 +225,13 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
             style={{ transform: "rotate(-90deg)" }}
           >
             {names.map((name, idx) => {
-              const segmentAngle = 360 / names.length;
-              const startAngle = idx * segmentAngle;
-              const endAngle = (idx + 1) * segmentAngle;
-
-              const startAngleRad = (startAngle * Math.PI) / 180;
-              const endAngleRad = (endAngle * Math.PI) / 180;
-
-              const x1 = 200 + 180 * Math.cos(startAngleRad);
-              const y1 = 200 + 180 * Math.sin(startAngleRad);
-              const x2 = 200 + 180 * Math.cos(endAngleRad);
-              const y2 = 200 + 180 * Math.sin(endAngleRad);
-
-              const largeArc = segmentAngle > 180 ? 1 : 0;
-
-              const pathData = [
-                `M 200 200`,
-                `L ${x1} ${y1}`,
-                `A 180 180 0 ${largeArc} 1 ${x2} ${y2}`,
-                `Z`,
-              ].join(" ");
-
-              const color = getSegmentColor(idx);
               const isTarget = name === targetName && !isSpinning;
+              const color = idx % 2 === 0 ? "#ef4444" : "#22c55e";
 
               return (
                 <g key={`segment-${idx}`}>
                   <path
-                    d={pathData}
+                    d={getSegmentPath(idx, segmentAngle)}
                     fill={isTarget ? "#ef4444" : color}
                     stroke="#1f2937"
                     strokeWidth="2"
@@ -272,27 +244,14 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
 
           {/* Names on segments */}
           {names.map((name, idx) => {
-            const segmentAngle = 360 / names.length;
-            // Calculate angle for name position (0deg = right, 90deg = bottom)
-            // Since SVG is rotated -90deg, we need to offset
-            const baseAngle = idx * segmentAngle + segmentAngle / 2;
-            const angle = baseAngle - 90; // Offset for SVG rotation
-            const angleRad = (angle * Math.PI) / 180;
-            const radius = 140;
-            const x = 200 + radius * Math.cos(angleRad);
-            const y = 200 + radius * Math.sin(angleRad);
             const isTarget = name === targetName && !isSpinning;
+            const position = getNamePosition(idx, segmentAngle);
 
             return (
               <div
                 key={`name-${idx}`}
                 className="absolute"
-                style={{
-                  left: `${(x / 400) * 100}%`,
-                  top: `${(y / 400) * 100}%`,
-                  transform: `translate(-50%, -50%) rotate(${baseAngle}deg)`,
-                  transformOrigin: "center",
-                }}
+                style={{ ...position, transformOrigin: "center" }}
               >
                 <span
                   className={`text-white font-bold text-lg whitespace-nowrap ${
@@ -300,9 +259,7 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
                       ? "text-yellow-300 drop-shadow-lg font-extrabold"
                       : ""
                   }`}
-                  style={{
-                    textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                  }}
+                  style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
                 >
                   {name}
                 </span>
