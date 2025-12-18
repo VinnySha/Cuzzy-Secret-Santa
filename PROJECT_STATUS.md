@@ -10,7 +10,7 @@
 
 2. **Database Initialization**
 
-   - ✅ All 6 cousins created in MongoDB
+   - ✅ All 6 cuzzys created in MongoDB
    - ✅ Users are created without secret keys (each user sets their own key on first login)
 
 3. **Code Status**
@@ -22,7 +22,7 @@
 
 ### Core Features
 
-- ✅ **Secret Key Authentication** - Each cousin creates and logs in with their own unique secret key
+- ✅ **Secret Key Authentication** - Each cuzzy creates and logs in with their own unique secret key
 - ✅ **Assignment Viewing** - View your Secret Santa assignment privately
 - ✅ **Drumroll Animation** - Special animation when viewing assignment for the first time
 - ✅ **Wishlist Management** - Add, edit, and manage your wishlist items
@@ -69,7 +69,7 @@ npm run shuffle
 curl -X POST http://localhost:5001/api/admin/shuffle
 ```
 
-This will randomly assign each cousin to another (ensuring no self-assignments). The `seenAssignment` flag is automatically reset, so users will see the animation again when they log in.
+This will randomly assign each cuzzy to another (ensuring no self-assignments). The `seenAssignment` flag is automatically reset, so users will see the animation again when they log in.
 
 ### 2. Start the Application
 
@@ -110,7 +110,7 @@ npm run dev:client
 
 ## 🎯 Current State
 
-- **Users:** ✅ 6 cousins initialized (without secret keys)
+- **Users:** ✅ 6 cuzzys initialized (without secret keys)
 - **Secret Keys:** ⏳ Users will set their own keys on first login
 - **Assignments:** ⏳ Not shuffled yet (run `python scripts/shuffle.py` when ready)
 - **Server:** ⏳ Not running (start with `npm run dev`)
@@ -152,7 +152,7 @@ npm run dev:client
 Your Secret Santa app is fully set up and ready to use!
 
 1. Start the servers with `npm run dev`
-2. Each cousin will visit the site and set their own secret key on first login
+2. Each cuzzy will visit the site and set their own secret key on first login
 3. Once all users have set their keys, shuffle the assignments when ready
 4. Users can then log in with their secret keys to see their assignments
 

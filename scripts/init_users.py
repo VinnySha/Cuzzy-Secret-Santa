@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 load_dotenv()
 
-COUSINS = [
+CUZZYS = [
     {"name": "Charvi"},
     {"name": "Rohan"},
     {"name": "Vinny"},
@@ -42,18 +42,18 @@ def init_users():
         created_users = []
         errors = []
 
-        for cousin in COUSINS:
+        for cuzzy in CUZZYS:
             try:
                 # Check if user already exists
-                existing = users_collection.find_one({"name": cousin["name"]})
+                existing = users_collection.find_one({"name": cuzzy["name"]})
                 if existing:
-                    print(f"⚠️  {cousin['name']} already exists, skipping...")
-                    errors.append({"name": cousin["name"], "error": "Already exists"})
+                    print(f"⚠️  {cuzzy['name']} already exists, skipping...")
+                    errors.append({"name": cuzzy["name"], "error": "Already exists"})
                     continue
 
                 # Create user without secret key (users will set it themselves)
                 user = {
-                    "name": cousin["name"],
+                    "name": cuzzy["name"],
                     "secretKey": None,
                     "assignedTo": None,
                     "wishlist": [],
@@ -61,11 +61,11 @@ def init_users():
                 }
 
                 result = users_collection.insert_one(user)
-                created_users.append({"name": cousin["name"], "id": str(result.inserted_id)})
-                print(f"✅ Created user: {cousin['name']}")
+                created_users.append({"name": cuzzy["name"], "id": str(result.inserted_id)})
+                print(f"✅ Created user: {cuzzy['name']}")
             except Exception as error:
-                print(f"❌ Error creating {cousin['name']}: {error}")
-                errors.append({"name": cousin["name"], "error": str(error)})
+                print(f"❌ Error creating {cuzzy['name']}: {error}")
+                errors.append({"name": cuzzy["name"], "error": str(error)})
 
         print("\n📊 Summary:")
         print(f"✅ Created: {len(created_users)} users")

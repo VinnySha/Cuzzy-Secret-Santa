@@ -1,6 +1,6 @@
 # 🎁 Cuzzy Secret Santa 2025
 
-A full-stack Secret Santa website for the cousins! Each cousin creates their own secret key and logs in to see their assignment and manage their wishlist.
+A full-stack Secret Santa website for the cuzzys! Each cuzzy creates their own secret key and logs in to see their assignment and manage their wishlist.
 
 ## Features
 
@@ -19,7 +19,7 @@ A full-stack Secret Santa website for the cousins! Each cousin creates their own
 
 - Secret keys are hashed with bcrypt
 - JWT token authentication
-- Each cousin can only see their own assignment
+- Each cuzzy can only see their own assignment
 
 ## Tech Stack
 
@@ -40,7 +40,7 @@ A full-stack Secret Santa website for the cousins! Each cousin creates their own
 
 ### Shuffle Assignments
 
-Randomly assign each cousin to another (ensuring no self-assignments):
+Randomly assign each cuzzy to another (ensuring no self-assignments):
 
 ```bash
 python scripts/shuffle.py
@@ -123,4 +123,4 @@ npm run clear-keys
 
 ---
 
-Made with ❤️ for the cousins 🎄
+Made with ❤️ for the cuzzys hehe 🎄
