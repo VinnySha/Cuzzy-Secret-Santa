@@ -160,111 +160,118 @@ export default function DrumrollAnimation({ names, targetName, onComplete }) {
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 bg-gradient-to-br from-gray-900 to-gray-800 z-50 flex flex-col items-center justify-center"
-      initial={{ opacity: 1 }}
-      animate={{ opacity: fadeOut ? 0 : 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: FADE_DURATION / 1000, ease: "easeInOut" }}
+    <div
+      className="fixed inset-0 z-50"
+      style={{
+        background: "linear-gradient(to bottom right, #111827, #1f2937)",
+      }}
     >
-      {/* Drumroll text */}
       <motion.div
-        className="text-6xl font-bold mb-12 text-white"
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.7, 1, 0.7],
-        }}
-        transition={{
-          duration: 0.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        className="flex flex-col items-center justify-center h-full w-full"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: fadeOut ? 0 : 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: FADE_DURATION / 1000, ease: "easeInOut" }}
       >
-        🥁 Drumroll... 🥁
-      </motion.div>
-
-      {/* Wheel Container */}
-      <div className="relative w-[600px] h-[600px]">
-        {/* Pointer Triangle - flipped to point towards wheel */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20">
-          <div className="w-0 h-0 border-t-[25px] border-t-transparent border-b-[25px] border-b-transparent border-r-[35px] border-r-blue-500"></div>
-        </div>
-
-        {/* Rotating Wheel */}
+        {/* Drumroll text */}
         <motion.div
-          className="relative w-full h-full"
-          style={{
-            rotate: `${rotation}deg`,
+          className="text-6xl font-bold mb-12 text-white"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.7, 1, 0.7],
           }}
-          transition={isSpinning ? {} : { duration: 0.5, ease: "easeOut" }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         >
-          {/* Segmented Wheel using SVG */}
-          <svg
-            className="w-full h-full"
-            viewBox="0 0 400 400"
-            style={{ transform: "rotate(-90deg)" }}
+          🥁 Drumroll... 🥁
+        </motion.div>
+
+        {/* Wheel Container */}
+        <div className="relative w-[600px] h-[600px]">
+          {/* Pointer Triangle - flipped to point towards wheel */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20">
+            <div className="w-0 h-0 border-t-[25px] border-t-transparent border-b-[25px] border-b-transparent border-r-[35px] border-r-blue-500"></div>
+          </div>
+
+          {/* Rotating Wheel */}
+          <motion.div
+            className="relative w-full h-full"
+            style={{
+              rotate: `${rotation}deg`,
+            }}
+            transition={isSpinning ? {} : { duration: 0.5, ease: "easeOut" }}
           >
+            {/* Segmented Wheel using SVG */}
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 400 400"
+              style={{ transform: "rotate(-90deg)" }}
+            >
+              {names.map((name, idx) => {
+                const isTarget = name === targetName && !isSpinning;
+                const color = idx % 2 === 0 ? "#ef4444" : "#22c55e";
+
+                return (
+                  <g key={`segment-${idx}`}>
+                    <path
+                      d={getSegmentPath(idx, segmentAngle)}
+                      fill={isTarget ? "#3b82f6" : color}
+                      stroke="#1f2937"
+                      strokeWidth="2"
+                      className={isTarget ? "drop-shadow-lg" : ""}
+                    />
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Names on segments */}
             {names.map((name, idx) => {
               const isTarget = name === targetName && !isSpinning;
-              const color = idx % 2 === 0 ? "#ef4444" : "#22c55e";
+              const position = getNamePosition(idx, segmentAngle);
 
               return (
-                <g key={`segment-${idx}`}>
-                  <path
-                    d={getSegmentPath(idx, segmentAngle)}
-                    fill={isTarget ? "#ef4444" : color}
-                    stroke="#1f2937"
-                    strokeWidth="2"
-                    className={isTarget ? "drop-shadow-lg" : ""}
-                  />
-                </g>
+                <div
+                  key={`name-${idx}`}
+                  className="absolute"
+                  style={{ ...position, transformOrigin: "center" }}
+                >
+                  <span
+                    className={`text-white font-bold text-lg whitespace-nowrap ${
+                      isTarget
+                        ? "text-yellow-300 drop-shadow-lg font-extrabold"
+                        : ""
+                    }`}
+                    style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
+                  >
+                    {name}
+                  </span>
+                </div>
               );
             })}
-          </svg>
 
-          {/* Names on segments */}
-          {names.map((name, idx) => {
-            const isTarget = name === targetName && !isSpinning;
-            const position = getNamePosition(idx, segmentAngle);
-
-            return (
-              <div
-                key={`name-${idx}`}
-                className="absolute"
-                style={{ ...position, transformOrigin: "center" }}
-              >
-                <span
-                  className={`text-white font-bold text-lg whitespace-nowrap ${
-                    isTarget
-                      ? "text-yellow-300 drop-shadow-lg font-extrabold"
-                      : ""
-                  }`}
-                  style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
-                >
-                  {name}
-                </span>
-              </div>
-            );
-          })}
-
-          {/* Center Hub */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-2xl z-10 border-4 border-gray-300"></div>
-        </motion.div>
-      </div>
-
-      {/* Confetti overlay */}
-      <AnimatePresence>
-        {showConfetti && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 pointer-events-none"
-          >
-            {/* Confetti is handled by canvas-confetti */}
+            {/* Center Hub */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-2xl z-10 border-4 border-gray-300"></div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+        </div>
+
+        {/* Confetti overlay */}
+        <AnimatePresence>
+          {showConfetti && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 pointer-events-none"
+            >
+              {/* Confetti is handled by canvas-confetti */}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
