@@ -179,24 +179,46 @@ export default function Dashboard({ user, onLogout }) {
                   {assignment.assignedTo.name} 🎉
                 </motion.p>
 
-                {assignment.assignedTo.wishlist &&
-                  assignment.assignedTo.wishlist.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-300">
-                        Their Wishlist:
-                      </h3>
-                      <ul className="list-disc list-inside space-y-1 text-left">
+                {/* Assignment's Wishlist - Always visible when assignment exists */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700"
+                >
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200 flex items-center justify-center gap-2">
+                    <span>🎯</span>
+                    <span>Their Wishlist</span>
+                  </h3>
+                  {assignment.assignedTo.wishlist &&
+                  assignment.assignedTo.wishlist.length > 0 ? (
+                    <ul className="list-none space-y-2 text-left">
+                      <AnimatePresence>
                         {assignment.assignedTo.wishlist.map((item, idx) => (
-                          <li
+                          <motion.li
                             key={idx}
-                            className="text-gray-600 dark:text-gray-400"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="flex items-start gap-2 p-2 bg-gradient-to-r from-red-50 to-green-50 dark:from-gray-700 dark:to-gray-600 rounded-lg"
                           >
-                            {item}
-                          </li>
+                            <span className="text-green-600 dark:text-green-400 mt-1">
+                              ✓
+                            </span>
+                            <span className="text-gray-700 dark:text-gray-300 flex-1">
+                              {item}
+                            </span>
+                          </motion.li>
                         ))}
-                      </ul>
-                    </div>
+                      </AnimatePresence>
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic text-sm py-2">
+                      No wishlist items yet. They haven't added anything to
+                      their wishlist.
+                    </p>
                   )}
+                </motion.div>
               </motion.div>
             ) : (
               <p className="text-gray-600 dark:text-gray-400 text-center">
