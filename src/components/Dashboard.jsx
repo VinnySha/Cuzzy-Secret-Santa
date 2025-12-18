@@ -393,9 +393,6 @@ export default function Dashboard({ user, onLogout }) {
               <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">
                 🎅 Chat with Your Secret Santa
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Messages are anonymous
-              </p>
 
               {/* Messages */}
               <div

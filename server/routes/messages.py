@@ -3,8 +3,21 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user import User
 from models.message import Message
 from bson import ObjectId
+from datetime import timezone
 
 messages_bp = Blueprint("messages", __name__)
+
+
+def format_datetime_utc(dt):
+    """Format datetime to ISO string with UTC timezone indicator (Z suffix)"""
+    if dt.tzinfo is None:
+        # If naive, assume it's UTC
+        dt = dt.replace(tzinfo=timezone.utc)
+    # Format with 'Z' suffix to explicitly indicate UTC
+    dt_str = dt.isoformat().replace('+00:00', 'Z')
+    if not dt_str.endswith('Z'):
+        dt_str += 'Z'
+    return dt_str
 
 
 @messages_bp.route("/conversation/assignment", methods=["GET"])
@@ -47,7 +60,7 @@ def get_assignment_conversation():
                 "senderId": str(msg["senderId"]),
                 "receiverId": str(msg["receiverId"]),
                 "isFromMe": str(msg["senderId"]) == user_id,
-                "createdAt": msg["createdAt"].isoformat(),
+                "createdAt": format_datetime_utc(msg["createdAt"]),
             })
 
         return jsonify({
@@ -97,7 +110,7 @@ def get_santa_conversation():
                 "senderId": str(msg["senderId"]),
                 "receiverId": str(msg["receiverId"]),
                 "isFromMe": str(msg["senderId"]) == user_id,
-                "createdAt": msg["createdAt"].isoformat(),
+                "createdAt": format_datetime_utc(msg["createdAt"]),
             })
 
         return jsonify({
@@ -146,7 +159,7 @@ def send_message_to_assignment():
                 "senderId": str(message["senderId"]),
                 "receiverId": str(message["receiverId"]),
                 "isFromMe": True,
-                "createdAt": message["createdAt"].isoformat(),
+                "createdAt": format_datetime_utc(message["createdAt"]),
             },
         })
     except Exception as error:
@@ -190,7 +203,7 @@ def send_message_to_santa():
                 "senderId": str(message["senderId"]),
                 "receiverId": str(message["receiverId"]),
                 "isFromMe": True,
-                "createdAt": message["createdAt"].isoformat(),
+                "createdAt": format_datetime_utc(message["createdAt"]),
             },
         })
     except Exception as error:
