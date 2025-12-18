@@ -210,7 +210,7 @@ export default function Dashboard({ user, onLogout }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-green-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -242,7 +242,7 @@ export default function Dashboard({ user, onLogout }) {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-red-50 to-green-50">
+    <div className="min-h-screen p-6 bg-gradient-to-br from-red-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <motion.h1
@@ -266,7 +266,7 @@ export default function Dashboard({ user, onLogout }) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6"
+            className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg mb-6"
           >
             {error}
           </motion.div>
