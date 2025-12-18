@@ -38,6 +38,7 @@ def get_my_assignment():
             "assignedTo": {
                 "name": assigned_user["name"],
                 "wishlist": assigned_user.get("wishlist", []),
+                "questionnaire": assigned_user.get("questionnaire", {}),
             },
         })
     except Exception as error:
@@ -118,5 +119,58 @@ def mark_assignment_seen():
         })
     except Exception as error:
         print(f"Mark assignment seen error: {error}")
+        return jsonify({"error": "Server error"}), 500
+
+
+@assignments_bp.route("/my-questionnaire", methods=["GET"])
+@jwt_required()
+def get_my_questionnaire():
+    """Get the current user's questionnaire answers"""
+    try:
+        db = current_app.config["MONGO_DB"]
+        user_model = User(db)
+
+        user_id = get_jwt_identity()
+        user = user_model.find_by_id(user_id)
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "questionnaire": user.get("questionnaire", {}),
+        })
+    except Exception as error:
+        print(f"Get questionnaire error: {error}")
+        return jsonify({"error": "Server error"}), 500
+
+
+@assignments_bp.route("/my-questionnaire", methods=["PUT"])
+@jwt_required()
+def update_my_questionnaire():
+    """Update the current user's questionnaire answers"""
+    try:
+        db = current_app.config["MONGO_DB"]
+        user_model = User(db)
+
+        data = request.get_json()
+        questionnaire = data.get("questionnaire")
+
+        if not isinstance(questionnaire, dict):
+            return jsonify({"error": "Questionnaire must be an object"}), 400
+
+        user_id = get_jwt_identity()
+        user = user_model.find_by_id(user_id)
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_model.update_questionnaire(user_id, questionnaire)
+
+        return jsonify({
+            "message": "Questionnaire updated successfully",
+            "questionnaire": questionnaire,
+        })
+    except Exception as error:
+        print(f"Update questionnaire error: {error}")
         return jsonify({"error": "Server error"}), 500
 

@@ -96,3 +96,10 @@ class User:
         """Reset seenAssignment to False for all users"""
         self.collection.update_many({}, {"$set": {"seenAssignment": False}})
 
+    def update_questionnaire(self, user_id, questionnaire):
+        """Update user's questionnaire answers"""
+        self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"questionnaire": questionnaire}}
+        )
+

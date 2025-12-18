@@ -6,6 +6,8 @@ import {
   updateMyWishlist,
   getUsers,
   markAssignmentSeen,
+  getMyQuestionnaire,
+  updateMyQuestionnaire,
 } from "../utils/api";
 import DrumrollAnimation from "./DrumrollAnimation";
 
@@ -20,6 +22,8 @@ export default function Dashboard({ user, onLogout }) {
   const [allNames, setAllNames] = useState([]);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isReplay, setIsReplay] = useState(false);
+  const [questionnaire, setQuestionnaire] = useState({});
+  const [savingQuestionnaire, setSavingQuestionnaire] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -28,14 +32,17 @@ export default function Dashboard({ user, onLogout }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [assignmentData, wishlistData, usersData] = await Promise.all([
-        getMyAssignment(),
-        getMyWishlist(),
-        getUsers(),
-      ]);
+      const [assignmentData, wishlistData, usersData, questionnaireData] =
+        await Promise.all([
+          getMyAssignment(),
+          getMyWishlist(),
+          getUsers(),
+          getMyQuestionnaire(),
+        ]);
 
       setAssignment(assignmentData);
       setMyWishlist(wishlistData.wishlist || []);
+      setQuestionnaire(questionnaireData.questionnaire || {});
 
       // Extract names from users data
       const names = (usersData.users || []).map((u) => u.name);
@@ -110,6 +117,96 @@ export default function Dashboard({ user, onLogout }) {
       setError(err.message || "Failed to save wishlist");
     }
   };
+
+  const handleQuestionnaireChange = (questionKey, value) => {
+    setQuestionnaire((prev) => ({
+      ...prev,
+      [questionKey]: value,
+    }));
+  };
+
+  const handleSaveQuestionnaire = async () => {
+    try {
+      setSavingQuestionnaire(true);
+      await updateMyQuestionnaire(questionnaire);
+      setError(""); // Clear any previous errors
+    } catch (err) {
+      setError(err.message || "Failed to save questionnaire");
+    } finally {
+      setSavingQuestionnaire(false);
+    }
+  };
+
+  const questionnaireQuestions = [
+    {
+      key: "q1",
+      question:
+        "If I vanished for a weekend with no responsibilities, what would I most likely be doing?",
+      placeholder:
+        "(e.g. cooking, gaming, rotting in bed, road-tripping, deep-diving a niche hobby)",
+    },
+    {
+      key: "q2",
+      question:
+        "What's a small thing that brings me way more joy than it reasonably should?",
+      placeholder:
+        "(snacks, candles, socks, mugs, stationery, gadgets, dumb collectibles, etc.)",
+    },
+    {
+      key: "q3",
+      question:
+        "What's my current \"I'm weirdly obsessed with this right now\" thing?",
+      placeholder:
+        "(show, artist, sport, random phase, niche interest, hyperfixation)",
+    },
+    {
+      key: "q4",
+      question:
+        "What's a gift vibe I'd secretly love but would never buy for myself?",
+      placeholder:
+        "(sentimental, impractical, aesthetic, cozy, chaotic, mildly unhinged)",
+    },
+    {
+      key: "q5",
+      question:
+        "If you had to describe my energy as an object, what would it be?",
+      placeholder:
+        "(examples: lava lamp, leather jacket, fuzzy blanket, AirPods at full volume, espresso shot)",
+    },
+    {
+      key: "q6",
+      question:
+        "What's something I complain about a lot but would actually love an upgrade of?",
+      placeholder:
+        "(charger cables, water bottle, backpack, slippers, desk setup, kitchen tools)",
+    },
+    {
+      key: "q7",
+      question:
+        "What's a joke / memory / inside reference that always makes me laugh?",
+      placeholder: "(this is bait for elite personalized gifts)",
+    },
+    {
+      key: "q8",
+      question:
+        "If you gave me something completely useless but hilarious, what should the humor be based on?",
+      placeholder:
+        "(self-deprecating, ironic, cursed, nostalgic, absurd, dramatic)",
+    },
+    {
+      key: "q9",
+      question:
+        "What's one personality trait of mine that you think is underrated?",
+      placeholder: "(this helps steer toward meaningful vs funny gifts)",
+    },
+    {
+      key: "q10",
+      question:
+        'Finish the sentence: "A perfect gift for me is something that makes me feel ______."',
+      placeholder:
+        "(seen, cozy, hyped, nostalgic, roasted, inspired, chaotic, appreciated)",
+    },
+  ];
 
   if (loading) {
     return (
@@ -351,6 +448,102 @@ export default function Dashboard({ user, onLogout }) {
             )}
           </motion.div>
         </div>
+
+        {/* Questionnaire Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-3xl mx-auto"
+        >
+          <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200 text-center">
+            🎯 Gift Guide Questionnaire
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 text-center">
+            Help your Secret Santa get to know you better! Your answers will
+            only be visible to you and the person assigned to you.
+          </p>
+
+          <div className="space-y-6">
+            {questionnaireQuestions.map((item, idx) => (
+              <motion.div
+                key={item.key}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="space-y-2"
+              >
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {item.question}
+                </label>
+                <input
+                  type="text"
+                  value={questionnaire[item.key] || ""}
+                  onChange={(e) =>
+                    handleQuestionnaireChange(item.key, e.target.value)
+                  }
+                  placeholder={item.placeholder}
+                  className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-red-500 dark:bg-gray-700 dark:text-white text-sm"
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            className="mt-8 flex justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <motion.button
+              onClick={handleSaveQuestionnaire}
+              disabled={savingQuestionnaire}
+              className="px-8 py-3 bg-gradient-to-r from-red-500 to-green-500 text-white rounded-lg font-semibold shadow-lg hover:from-red-600 hover:to-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: savingQuestionnaire ? 1 : 1.05 }}
+              whileTap={{ scale: savingQuestionnaire ? 1 : 0.95 }}
+            >
+              {savingQuestionnaire ? "Saving..." : "💾 Save Questionnaire"}
+            </motion.button>
+          </motion.div>
+
+          {/* Display assigned person's questionnaire if available */}
+          {assignment?.assigned &&
+            assignment?.assignedTo?.questionnaire &&
+            Object.keys(assignment.assignedTo.questionnaire).length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700"
+              >
+                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 text-center">
+                  📋 {assignment.assignedTo.name}'s Questionnaire Answers
+                </h3>
+                <div className="space-y-4">
+                  {questionnaireQuestions.map((item) => {
+                    const answer =
+                      assignment.assignedTo.questionnaire[item.key];
+                    if (!answer) return null;
+                    return (
+                      <motion.div
+                        key={item.key}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="p-4 bg-gradient-to-r from-red-50 to-green-50 dark:from-gray-700 dark:to-gray-600 rounded-lg"
+                      >
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          {item.question}
+                        </p>
+                        <p className="text-gray-800 dark:text-gray-200">
+                          {answer}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+        </motion.div>
       </div>
     </div>
   );

@@ -156,3 +156,14 @@ export const markAssignmentSeen = async () => {
     method: "POST",
   });
 };
+
+export const getMyQuestionnaire = async () => {
+  return authFetch("/assignments/my-questionnaire");
+};
+
+export const updateMyQuestionnaire = async (questionnaire) => {
+  return authFetch("/assignments/my-questionnaire", {
+    method: "PUT",
+    body: JSON.stringify({ questionnaire }),
+  });
+};
