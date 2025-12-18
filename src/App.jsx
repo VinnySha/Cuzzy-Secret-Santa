@@ -1,26 +1,29 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import LandingPage from "./components/LandingPage";
+import NameSelection from "./components/NameSelection";
+import KeySetup from "./components/KeySetup";
 import Login from "./components/Login";
+import WaitingPage from "./components/WaitingPage";
 import Dashboard from "./components/Dashboard";
 import { verifyToken } from "./utils/api";
 
-function App() {
+// Protected Route component for Dashboard
+function ProtectedDashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
 
     if (token && savedUser) {
-      // Verify token is still valid
       verifyToken()
         .then((data) => {
           setUser(JSON.parse(savedUser));
         })
         .catch(() => {
-          // Token invalid, clear storage
           localStorage.removeItem("token");
           localStorage.removeItem("user");
         })
@@ -31,16 +34,6 @@ function App() {
       setLoading(false);
     }
   }, []);
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  };
 
   if (loading) {
     return (
@@ -56,30 +49,75 @@ function App() {
     );
   }
 
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  };
+
+  return <Dashboard user={user} onLogout={handleLogout} />;
+}
+
+// Protected Route component for Waiting Page
+function ProtectedWaiting() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+
+    if (token && savedUser) {
+      verifyToken()
+        .then(() => {
+          // Token is valid
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/";
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      window.location.href = "/";
+    }
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-green-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="text-6xl"
+        >
+          🎁
+        </motion.div>
+      </div>
+    );
+  }
+
+  return <WaitingPage />;
+}
+
+function App() {
   return (
-    <div className="min-h-screen">
-      <AnimatePresence mode="wait">
-        {!user ? (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <Login onLoginSuccess={handleLoginSuccess} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-          >
-            <Dashboard user={user} onLogout={handleLogout} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/name" element={<NameSelection />} />
+        <Route path="/key" element={<KeySetup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/waiting" element={<ProtectedWaiting />} />
+        <Route path="/dashboard" element={<ProtectedDashboard />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from bson import ObjectId
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent directory to path to import User model
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -61,7 +61,7 @@ def init_users():
                     "secretKey": hashed_key,
                     "assignedTo": None,
                     "wishlist": [],
-                    "createdAt": datetime.utcnow(),
+                    "createdAt": datetime.now(timezone.utc),
                 }
 
                 result = users_collection.insert_one(user)

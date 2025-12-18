@@ -41,11 +41,11 @@ const authFetch = async (url, options = {}) => {
 };
 
 // Auth API
-export const login = async (secretKey) => {
+export const login = async (name, secretKey) => {
   const response = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secretKey }),
+    body: JSON.stringify({ name, secretKey }),
   });
 
   if (!response.ok) {
@@ -57,6 +57,49 @@ export const login = async (secretKey) => {
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.user));
   return data;
+};
+
+export const getUsers = async () => {
+  const response = await fetch(`${API_BASE}/auth/users`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to get users");
+  }
+
+  return response.json();
+};
+
+export const checkUserKey = async (name) => {
+  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/check-key`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to check key");
+  }
+
+  return response.json();
+};
+
+export const setUserKey = async (name, secretKey) => {
+  const response = await fetch(`${API_BASE}/auth/users/${encodeURIComponent(name)}/set-key`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secretKey }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to set key");
+  }
+
+  return response.json();
 };
 
 export const verifyToken = async () => {

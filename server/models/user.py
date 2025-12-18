@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from bson import ObjectId
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class User:
@@ -17,7 +17,7 @@ class User:
             "secretKey": hashed_key,
             "assignedTo": None,
             "wishlist": [],
-            "createdAt": datetime.utcnow(),
+            "createdAt": datetime.now(timezone.utc),
         }
         
         result = self.collection.insert_one(user)
@@ -68,4 +68,16 @@ class User:
         
         assigned_user = self.find_by_id(user["assignedTo"])
         return assigned_user
+
+    def update_secret_key(self, user_id, secret_key):
+        """Update user's secret key"""
+        hashed_key = bcrypt.hashpw(secret_key.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"secretKey": hashed_key}}
+        )
+
+    def has_secret_key(self, user):
+        """Check if user has a secret key set"""
+        return user and "secretKey" in user and user["secretKey"]
 
