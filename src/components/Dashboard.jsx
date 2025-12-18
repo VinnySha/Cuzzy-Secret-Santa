@@ -19,6 +19,7 @@ export default function Dashboard({ user, onLogout }) {
   const [showAnimation, setShowAnimation] = useState(false);
   const [allNames, setAllNames] = useState([]);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [isReplay, setIsReplay] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -62,12 +63,27 @@ export default function Dashboard({ user, onLogout }) {
     setShowAnimation(false);
     setAnimationComplete(true);
 
-    // Mark assignment as seen on the server
-    try {
-      await markAssignmentSeen();
-    } catch (err) {
-      console.error("Failed to mark assignment as seen:", err);
-      // Don't show error to user, this is a background operation
+    // Mark assignment as seen on the server (only if not a replay)
+    if (!isReplay) {
+      try {
+        await markAssignmentSeen();
+      } catch (err) {
+        console.error("Failed to mark assignment as seen:", err);
+        // Don't show error to user, this is a background operation
+      }
+    }
+    setIsReplay(false); // Reset replay flag
+  };
+
+  const handleReplayAnimation = () => {
+    if (
+      assignment?.assigned &&
+      assignment?.assignedTo?.name &&
+      allNames.length > 0
+    ) {
+      setIsReplay(true);
+      setShowAnimation(true);
+      setAnimationComplete(false);
     }
   };
 
@@ -180,7 +196,7 @@ export default function Dashboard({ user, onLogout }) {
                   You got:
                 </p>
                 <motion.p
-                  className="text-4xl font-bold text-red-600 dark:text-red-400 mb-6"
+                  className="text-4xl font-bold text-red-600 dark:text-red-400 mb-4"
                   animate={{
                     scale: [1, 1.1, 1],
                   }}
@@ -191,6 +207,19 @@ export default function Dashboard({ user, onLogout }) {
                 >
                   {assignment.assignedTo.name} 🎉
                 </motion.p>
+
+                {/* Replay Animation Button */}
+                <motion.button
+                  onClick={handleReplayAnimation}
+                  className="mb-6 px-4 py-2 bg-gradient-to-r from-red-500 to-green-500 text-white rounded-lg font-semibold shadow-lg hover:from-red-600 hover:to-green-600 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  🎬 Replay Animation
+                </motion.button>
 
                 {/* Assignment's Wishlist - Always visible when assignment exists */}
                 <motion.div
