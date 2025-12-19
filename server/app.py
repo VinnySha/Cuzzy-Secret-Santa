@@ -112,6 +112,30 @@ def serve(path):
         return jsonify({"error": "Frontend not built. Please run 'npm run build'"}), 500
 
 
+# 404 error handler as backup - catches any 404s that slip through
+@app.errorhandler(404)
+def handle_404(error):
+    """Handle 404 errors by serving index.html for SPA routing"""
+    path = request.path
+    
+    # Exclude API routes - they should return 404 if not found
+    if path.startswith("/api/"):
+        return jsonify({"error": "Not found"}), 404
+    
+    # Check if the path is a static file
+    if path != "/" and not path.startswith("/api/"):
+        static_path = os.path.join(DIST_DIR, path.lstrip("/"))
+        if os.path.exists(static_path) and os.path.isfile(static_path):
+            return send_from_directory(DIST_DIR, path.lstrip("/"))
+    
+    # Serve index.html for all other routes
+    index_path = os.path.join(DIST_DIR, "index.html")
+    if os.path.exists(index_path):
+        return send_from_directory(DIST_DIR, "index.html")
+    else:
+        return jsonify({"error": "Frontend not built. Please run 'npm run build'"}), 500
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
