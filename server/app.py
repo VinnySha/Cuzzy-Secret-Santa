@@ -11,7 +11,13 @@ from routes.messages import messages_bp
 
 load_dotenv()
 
-app = Flask(__name__, static_folder="../dist", static_url_path="")
+# Get absolute path to dist folder (project root/dist)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIST_DIR = os.path.join(BASE_DIR, "dist")
+
+# Don't use static_url_path="" to avoid Flask's automatic static file serving
+# We'll handle static files manually in our routes
+app = Flask(__name__, static_folder=None)
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "secret-santa-key")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False  # 7 days handled in token creation
 
@@ -84,19 +90,26 @@ def health():
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
+    """Catch-all route to serve SPA - handles both static files and client-side routes"""
     # Exclude API routes - they should be handled by blueprints above
     if path.startswith("api/"):
         return jsonify({"error": "Not found"}), 404
     
-    # Check if the path is a static file (e.g., CSS, JS, images)
-    if path != "":
-        static_path = os.path.join(app.static_folder, path)
+    # Check if the path is a static file (e.g., CSS, JS, images from Vite build)
+    if path != "" and not path.startswith("api/"):
+        static_path = os.path.join(DIST_DIR, path)
+        # Check if it's a file that exists
         if os.path.exists(static_path) and os.path.isfile(static_path):
-            return send_from_directory(app.static_folder, path)
+            return send_from_directory(DIST_DIR, path)
     
     # For all other routes (including nested routes like /key, /login, etc.), serve index.html
     # This allows React Router to handle client-side routing
-    return send_from_directory(app.static_folder, "index.html")
+    index_path = os.path.join(DIST_DIR, "index.html")
+    if os.path.exists(index_path):
+        return send_from_directory(DIST_DIR, "index.html")
+    else:
+        # Fallback if dist folder doesn't exist (shouldn't happen in production)
+        return jsonify({"error": "Frontend not built. Please run 'npm run build'"}), 500
 
 
 if __name__ == "__main__":
