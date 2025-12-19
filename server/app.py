@@ -80,13 +80,23 @@ def health():
 
 
 # Serve React app in production
+# This catch-all route must be registered last to allow API routes to be handled first
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
-    if path != "" and os.path.exists(app.static_folder + "/" + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, "index.html")
+    # Exclude API routes - they should be handled by blueprints above
+    if path.startswith("api/"):
+        return jsonify({"error": "Not found"}), 404
+    
+    # Check if the path is a static file (e.g., CSS, JS, images)
+    if path != "":
+        static_path = os.path.join(app.static_folder, path)
+        if os.path.exists(static_path) and os.path.isfile(static_path):
+            return send_from_directory(app.static_folder, path)
+    
+    # For all other routes (including nested routes like /key, /login, etc.), serve index.html
+    # This allows React Router to handle client-side routing
+    return send_from_directory(app.static_folder, "index.html")
 
 
 if __name__ == "__main__":
